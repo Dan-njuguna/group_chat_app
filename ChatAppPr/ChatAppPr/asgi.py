@@ -16,5 +16,14 @@ from Chat import routing
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ChatAppPr.settings')
 
-application = get_asgi_application()
+application = ProtocolTypeRouter(
+    {
+        "https" : get_asgi_application(),
+        "websocket": AuthMiddlewareStack(
+            URLRouter(
+                routing.urlpatterns
+            )
+        )
+    }
+)
 
