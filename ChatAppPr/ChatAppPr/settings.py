@@ -114,7 +114,7 @@ CHANNEL_LAYERS = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'EAT'
+TIME_ZONE = 'GMT + 3'
 
 USE_I18N = True
 
@@ -131,5 +131,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = "../Chat/templates/chatPage"
-LOGOUT_REDIRECT_URL = "../Chat/templates/LoginPage"
+LOGIN_REDIRECT_URL = "chat-page"
+LOGOUT_REDIRECT_URL = "login-page"
