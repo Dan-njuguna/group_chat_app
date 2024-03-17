@@ -2,12 +2,11 @@ import json
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.roomGroupName = "group_chat"
+        self.roomName = "Group"
         await self.channel_layer.group_add(
-            self.roomGroupName,
+            self.roomName,
             self.channel_name
         )
         await self.accept()
@@ -17,7 +16,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.roomGroupName,
             self.channel_layer
         )
-
+    
     async def receive(self, text_data):
         try:
             text_data_json = json.loads(text_data)
