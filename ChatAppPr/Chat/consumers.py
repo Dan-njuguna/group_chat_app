@@ -42,10 +42,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
        await self.send(text_data = json.dumps({"message": message, "username": username}))
 
 
-from ratelimit.decorators import ratelimit
+
 from channels.layers import get_channel_layer
 
-@ratelimit(key='chat.send_message', rate='10/m', block=True)
+
 def send_message_to_channel(message, username):
     channel_layer = get_channel_layer()
 
