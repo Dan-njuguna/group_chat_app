@@ -15,36 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from chat import routing
-from channels.routing import URLRouter, ProtocolTypeRouter
-from channels.auth import AuthMiddlewareStack
+from django.urls import path, include
 
-appplication = ProtocolTypeRouter({
-    'websocket': AuthMiddlewareStack(
-        URLRouter(
-            routing.d_urlpatterns,
-        ),
-        URLRouter(
-            routing.channels_urlpatterns
-        )
-    ),
-})
-
-
-"""
-from channels.routing import ProtocolTypeRouter, URLRouter
-from django.urls import path
-
-# Assuming you have a routing module for your application
-from my_channels import routing
-
-application = ProtocolTypeRouter({
-    'websocket': AuthMiddlewareStack(
-        URLRouter(
-            routing.websocket_urlpatterns,
-        ),
-    ),
-})
-
-"""
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path("", include("chat.urls")),
+]
