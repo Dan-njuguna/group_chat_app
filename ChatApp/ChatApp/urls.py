@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from Chat import routing
 
 urlpatterns = [
     path('', admin.site.urls),
+    path("Chat/", routing.websocket_urlpatterns),
 ]
