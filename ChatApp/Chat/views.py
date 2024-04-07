@@ -2,15 +2,21 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .form import Form
+from .models import (User,
+                     Room,
+                     Message)
+# from .form import Form
 
 class LoginView(APIView):
+    
     def get(self, request):
         return render(request, 'loginPage.html')
     
+    # @csrf_exempt
     def post(self, request):
         username = request.POST['username']
         password = request.POST['password']
