@@ -20,6 +20,6 @@ from Chat import routing, views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("Chat/", routing.websocket_urlpatterns),
+    path("", routing.websocket_urlpatterns),
     # path("login/", views.LoginView, name="login")
 ]

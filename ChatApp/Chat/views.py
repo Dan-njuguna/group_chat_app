@@ -11,10 +11,32 @@ from .models import (User,
                      Message)
 # from .form import Form
 
+# def chatpage(request, *args, **kwargs):
+#     if not request.user.is_authenticated:
+#         return redirect("login-user")
+#     context = {}
+#     return render(request,"Chat/templates/chatPage.html", context)
+
 class LoginView(APIView):
+    '''
+    This class is made to render the login page.
+    Functions:
+        1. get(self, request): renders the login form to the user.
+        2. post(self, request): Posts data collected on the Form to the database and validates if the user if valid or not.
+        3. chatpage(self, request): renders the chatpage if the user is authenticated.
+    '''
     
     def get(self, request):
-        return render(request, 'loginPage.html')
+        '''
+        This function renders the login form to the user.
+        @login: The login query variable saving data from the sqlite database.
+        @cont: the login data saved as a dictionary. To work as JSON.
+        '''
+        login = User.objects.all()
+        cont = {
+            "login": login,
+        }
+        return render(request, 'templates/loginPage.html', cont)
     
     # @csrf_exempt
     def post(self, request):
