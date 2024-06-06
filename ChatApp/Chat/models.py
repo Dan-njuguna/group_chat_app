@@ -1,21 +1,17 @@
 from django.db import models
-
-class User(models.Model):
-    username = models.CharField(max_length=50)
-    def __str__(self):
-        return self.username
+from django.contrib.auth.models import User
 
 class Room(models.Model):
-    name = models.CharField(max_length=100)
-    users = models.ManyToManyField(User)
+    name = models.CharField(max_length=255)
+
     def __str__(self):
         return self.name
-    
 
 class Message(models.Model):
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='messages')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return self.content
+        return f'{self.user.username}: {self.content[:20]}'

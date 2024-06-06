@@ -1,0 +1,30 @@
+<!-- chat/templates/base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Application</title>
+    <style>
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Chat Application</h1>
+        {% if user.is_authenticated %}
+            <p>Hello, {{ user.username }}!</p>
+            <p><a href="{% url 'logout' %}">Logout</a></p>
+        {% else %}
+            <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'signup' %}">Signup</a></p>
+        {% endif %}
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>
