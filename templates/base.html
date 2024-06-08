@@ -1,14 +1,9 @@
-<!-- chat/templates/base.html -->
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Chat Application</title>
-    <style>
-        .timestamp {
-            font-size: 0.8em;
-            color: #888;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
 <body>
     <header>

@@ -122,7 +122,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIR = (os.path.join(BASE_DIR, "static"), )
+STATICFILES_DIR = [os.path.join(BASE_DIR, "static")]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -135,5 +135,5 @@ CHANNEL_LAYERS = {
     }
 }
 
-LOGIN_REDIRECT_PAGE = "chat-page"
-LOGOUT_REDIRECT_PAGE = "login-user"
+LOGIN_REDIRECT_URL = "/chat/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
