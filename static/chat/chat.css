@@ -1,0 +1,76 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.header {
+    background-color: #007bff;
+    color: white;
+    padding: 1rem;
+    width: 100%;
+    text-align: center;
+}
+
+.container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 80%;
+    max-width: 600px;
+    padding: 1rem;
+}
+
+.messages {
+    max-height: 400px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.message-box {
+    margin-bottom: 1rem;
+}
+
+.message-author {
+    font-weight: bold;
+}
+
+.message-content {
+    margin: 0.5rem 0;
+}
+
+.message-timestamp {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-bottom: 0.5rem;
+}
+
+.button {
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
