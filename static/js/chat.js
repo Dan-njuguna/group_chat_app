@@ -1,72 +1,70 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const messageList = document.getElementById('message-list');
-    const messageForm = document.getElementById('message-form');
-    const messageInput = document.getElementById('message-input');
+const app = new Vue({
+    el: '#app',
+    data: {
+        message: '',
+        messages: [],
+        state: '',
+        showError: false  // Add a flag to control error message display
+    },
+    methods: {
+        sendMessage() {
+            const formData = new FormData(document.getElementById('message-form'));
+            const csrftoken = this.getCookie('csrftoken'); // Get CSRF token from Vue component
 
-    messageForm.addEventListener('submit', function(event) {
-        event.preventDefault();
+            fetch('/create_message/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrftoken // Pass CSRF token in headers
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update messages list
+                this.messages.push(data.message);
 
-        const formData = new FormData(messageForm);
+                // Clear message input
+                this.message = '';
 
-        fetch('/create_message/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const messageHTML = `
-                <div class="message">
-                    <div class="message-author">${data.author__name}</div>
-                    <div class="message-content">${data.content}</div>
-                    <div class="message-timestamp">${data.created_at}</div>
-                </div>`;
-            messageList.innerHTML += messageHTML;
-            messageInput.value = ''; // Clear the input field after sending message
-        })
-        .catch(error => console.error('Error sending message:', error));
-    });
+                // Scroll to bottom of message list (adjust as per your CSS/HTML structure)
+                this.scrollMessageListToBottom();
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                // Set error state and show error message
+                this.state = 'error';
+                this.showError = true;
+            });
+        },
 
-    // Function to get CSRF token from cookies
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+        // Function to get CSRF token from cookies
+        getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+            return cookieValue;
+        },
+
+        // Function to scroll message list to bottom
+        scrollMessageListToBottom() {
+            setTimeout(() => {
+                const messageList = document.getElementById('message-list');
+                messageList.scrollTop = messageList.scrollHeight;
+            }, 100); // Delay to ensure the DOM updates
         }
-        return cookieValue;
     }
-
-    // Function to start Server-Sent Events (SSE) for receiving messages
-    function startSSE() {
-        const eventSource = new EventSource('/stream_chat_messages/');
-
-        eventSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            const messageHTML = `
-                <div class="message">
-                    <div class="message-author">${data.author__name}</div>
-                    <div class="message-content">${data.content}</div>
-                    <div class="message-timestamp">${data.created_at}</div>
-                </div>`;
-            messageList.innerHTML += messageHTML;
-        };
-
-        eventSource.onerror = function(event) {
-            console.error('EventSource error:', event);
-            eventSource.close();
-        };
-    }
-
-    // Start SSE when the page loads
-    startSSE();
 });
