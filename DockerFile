@@ -1,0 +1,17 @@
+# Python environment for runtime
+FROM python:3.10.12
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONNUNBUFFERED 1
+
+WORKDIR /app
+
+COPY requirements.txt /app/
+
+RUN pip install -r requirements.txt
+RUN python3 manage.py collectstatic --no-input
+RUN python3 manage.py migrate
+RUN python3 manage.py makemigrations
+RUN python3 manage.py runserver
+
+COPY . /app/
