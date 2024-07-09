@@ -2,8 +2,11 @@
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse, StreamingHttpResponse, HttpResponse
 from .models import Group, Author, Message
+from django.db.models import Max
+from django.db.models.functions import Coalesce
 from django.core.exceptions import ObjectDoesNotExist
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -29,43 +32,35 @@ def chat(request, group_id):
     return render(request, 'chat/chat.html', context)
 
 @login_required
-async def create_message(request):
-    if request.method == 'POST':
-        content = request.POST.get('content', '')
-        if content.strip():
-            try:
-                author = await get_author(request.user)
-            except Author.DoesNotExist:
-                return HttpResponse("Author does not exist for this user.", status=404)
-            
-            group_id = request.POST.get('group_id')
-            group = get_object_or_404(Group, id=group_id)
-            with transaction.atomic():
-                message = Message.objects.create(author=author, group=group, content=content)
-            return JsonResponse({'success': True})
-        else:
-            return JsonResponse({'success': False, 'error': 'Message content cannot be empty.'})
-    else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+@require_POST
+def create_message(request):
+    content = request.POST.get('content', '').strip()
+    if not content:
+        return JsonResponse({'success': False, 'error': 'Message content cannot be empty.'}, status=400)
+    
+    group_id = request.POST.get('group_id')
+    group = get_object_or_404(Group, id=group_id)
+    
+    try:
+        with transaction.atomic():
+            message = Message.objects.create(author=request.user, group=group, content=content)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': True, 'message': {
+        'author__name': message.author.username,
+        'content': message.content,
+        'created_at': message.created_at.strftime('%Y-%m-%d %H:%M:%S')
+    }})
 
 async def stream_chat_messages(request, group_id):
-    group = get_object_or_404(Group, id=group_id)
-
-    async def event_stream():
-        async for message in get_existing_messages(group):
-            yield f"data: {json.dumps(message)}\n\n"
-        last_id = await get_last_message_id(group)
-        while True:
-            new_messages = Message.objects.filter(id__gt=last_id, group=group).order_by('created_at').values(
-                'author__user__username', 'content', 'created_at')
-            async for message in new_messages:
-                yield f"data: {json.dumps(message)}\n\n"
-                last_id = message['id']
-            await asyncio.sleep(0.1)
+    async def get_group_or_404(group_id):
+        return await sync_to_async(get_object_or_404)(Group, id=group_id)
 
     async def get_existing_messages(group):
-        messages = Message.objects.filter(group=group).order_by('created_at').values(
-            'author__user__username', 'content', 'created_at')
+        messages = await sync_to_async(list)(Message.objects.filter(group=group).order_by('created_at').values(
+            'author__user__username', 'content', 'created_at'
+        ))
         for message in messages:
             yield {
                 'author__user__username': message['author__user__username'],
@@ -74,7 +69,33 @@ async def stream_chat_messages(request, group_id):
             }
 
     async def get_last_message_id(group):
-        last_message = await Message.objects.filter(group=group).order_by('id').alast()
-        return last_message.id if last_message else 0
+        last_message = await sync_to_async(Message.objects.filter(group=group).aggregate)(
+            last_id=Coalesce(Max('id'), 0)
+        )
+        return last_message['last_id']
 
-    return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    async def get_new_messages(last_id, group):
+        new_messages = await sync_to_async(list)(
+            Message.objects.filter(id__gt=last_id, group=group).order_by('created_at').values(
+                'author__user__username', 'content', 'created_at', 'id'
+            )
+        )
+        return new_messages
+
+    group = await get_group_or_404(group_id)
+
+    async def event_stream():
+        async for message in get_existing_messages(group):
+            yield f"data: {json.dumps(message)}\n\n"
+        last_id = await get_last_message_id(group)
+        while True:
+            new_messages = await get_new_messages(last_id, group)
+            for message in new_messages:
+                yield f"data: {json.dumps(message)}\n\n"
+                last_id = message['id']
+            await asyncio.sleep(0.1)
+
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+
+    return response
