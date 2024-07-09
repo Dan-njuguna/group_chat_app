@@ -12,8 +12,9 @@ class Author(models.Model):
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
-    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_groups')
-    members = models.ManyToManyField(User, related_name='group_memberships')  # Updated related_name
+    description = models.TextField(blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    members = models.ManyToManyField(User, related_name='member_groups')
 
     def __str__(self):
         return self.name
