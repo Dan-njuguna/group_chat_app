@@ -7,6 +7,7 @@ from .forms import CustomSignupForm
 from django.contrib.auth.models import User
 from django.urls import reverse
 from chat.models import Group
+from chat.utils import get_or_create_bible_study_group
 
 def signup(request):
     """
@@ -16,8 +17,8 @@ def signup(request):
         request (HttpRequest): The incoming request object.
 
     Returns:
-        HttpResponse: The rendered signup page if the request method is not POST or if form is invalid.
-        HttpResponseRedirect: Redirects to the lobby page if the signup process is successful.
+        HttpResponse: The rendered signup page if the request method is not POST or if the form is invalid.
+        HttpResponseRedirect: Redirects to the chat page for the Bible Study group if the signup process is successful.
     """
     if request.method == 'POST':
         form = CustomSignupForm(request.POST)
@@ -27,7 +28,7 @@ def signup(request):
                 # Handle case where username is already taken
                 form.add_error('username', 'This username is already taken. Please choose a different one.')
                 return render(request, 'usersignin/signup.html', {'form': form})
-            
+
             # Create a new user with the form data
             user = User.objects.create_user(
                 username=username,
@@ -38,13 +39,18 @@ def signup(request):
             )
             # Log the user in using authenticate and login functions
             authenticated_user = authenticate(request, username=username, password=form.cleaned_data['password'])
-            login(request, authenticated_user, backend='django.contrib.auth.backends.ModelBackend')
-            # Redirect to the lobby page
-            return redirect('chat')
+            login(request, authenticated_user)
+
+            # Add the user to the Bible Study group
+            bible_study_group = get_or_create_bible_study_group(user)
+            bible_study_group.members.add(user)
+            
+            # Redirect to the chat page for the Bible Study group
+            return redirect('chat', group_id=bible_study_group.id)
     else:
         # Create an empty signup form
         form = CustomSignupForm()
-    
+
     # Render the signup page with the form
     return render(request, 'usersignin/signup.html', {'form': form})
 
@@ -68,9 +74,10 @@ def login_view(request: HttpRequest) -> HttpResponse:
             if user is not None:
                 login(request, user)
                 # Redirect to the lobby page
-                return redirect('chat')
+                return redirect('chat', group_id=1)
             else:
                 form.add_error(None, "Invalid username or password.")
+                return redirect('signup')
     else:
         form = AuthenticationForm()
     
